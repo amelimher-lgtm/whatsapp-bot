@@ -42,7 +42,7 @@ client.on('ready', () => {
 client.on('message', msg => {
     console.log(`Message received: ${msg.body}`);
     if(msg.body.toLowerCase() === 'hi') {
-        msg.reply('Hello! I am your WhatsApp bot.');
+        msg.reply('Hello! Welcome to ibetin.');
     }
 });
 
@@ -57,7 +57,7 @@ client.initialize();
 app.get('/', (req, res) => {
     let html = `
         <meta http-equiv="refresh" content="5">
-        <h1>WhatsApp Bot Status</h1>
+        <h1>WhatsApp Api Status</h1>
     `;
 
     if(latestQRCode && !isReady) {
@@ -80,3 +80,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server listening on port ${PORT}`);
 });
+
