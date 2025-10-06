@@ -1,26 +1,31 @@
-const qrcode = require('qrcode-terminal');
 const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode');
 const express = require('express');
 const app = express();
 
-// Render port
 const PORT = process.env.PORT || 3000;
 
-// Setup WhatsApp client with session storage
+// WhatsApp client with session
 const client = new Client({
-    authStrategy: new LocalAuth({ clientId: 'bot1' }), // session saved automatically
+    authStrategy: new LocalAuth({ clientId: 'bot1' }),
     puppeteer: { headless: true, args: ['--no-sandbox','--disable-setuid-sandbox'] }
 });
 
-client.on('qr', qr => {
-    qrcode.generate(qr, { small: true });
-    console.log('QR Code generated, scan with your WhatsApp app!');
+let latestQRCode = null; // store QR code for browser
+
+// QR received
+client.on('qr', async qr => {
+    // convert QR to data URL
+    latestQRCode = await qrcode.toDataURL(qr);
+    console.log('QR Code updated for browser scan!');
 });
 
+// Client ready
 client.on('ready', () => {
-    console.log('Client is ready!');
+    console.log('WhatsApp bot is ready!');
 });
 
+// Messages
 client.on('message', msg => {
     console.log(`Message received: ${msg.body}`);
     if(msg.body.toLowerCase() === 'hi') {
@@ -31,8 +36,17 @@ client.on('message', msg => {
 // Initialize client
 client.initialize();
 
-// Optional Express server for Render healthcheck
-app.get('/', (req, res) => res.send('WhatsApp bot is running!'));
+// Browser route
+app.get('/', (req, res) => {
+    if(latestQRCode) {
+        res.send(`
+            <h1>Scan QR Code to login WhatsApp</h1>
+            <img src="${latestQRCode}" alt="QR Code" />
+        `);
+    } else {
+        res.send('<h1>WhatsApp bot is running. Waiting for QR code...</h1>');
+    }
+});
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server listening on port ${PORT}`);
