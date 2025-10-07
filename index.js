@@ -60,7 +60,7 @@ client.on('disconnected', reason => {
 client.on('message', msg => {
     console.log(`📩 Message received: ${msg.body}`);
     if (msg.body.toLowerCase() === 'hi') {
-        msg.reply('Hello! 👋 Welcome to iBetIN.');
+        msg.reply('Hello! 👋 Welcome to IBETIN.');
     }
 });
 
@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
             img { width: 250px; margin-top: 20px; }
             .status { font-size: 1.2rem; margin-top: 10px; }
         </style>
-        <h1>WhatsApp Bot Status</h1>
+        <h1>WhatsApp API Status</h1>
     `;
 
     if (latestQRCode && !isReady) {
@@ -103,3 +103,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Server running on port ${PORT}`);
 });
+
