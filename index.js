@@ -1,9 +1,12 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
+const DATA_FILE = '/mnt/data/repliedNumbers.json'; // Persistent file
 
 // ------------------
 // Track bot status
@@ -12,12 +15,24 @@ let latestQRCode = null;
 let isReady = false;
 
 // ------------------
+// Load existing replied numbers
+// ------------------
+let repliedNumbers = [];
+if (fs.existsSync(DATA_FILE)) {
+    try {
+        repliedNumbers = JSON.parse(fs.readFileSync(DATA_FILE));
+    } catch (err) {
+        console.error('❌ Failed to load replied numbers:', err);
+    }
+}
+
+// ------------------
 // WhatsApp client with persistent session
 // ------------------
 const client = new Client({
     authStrategy: new LocalAuth({
-        clientId: 'bot1', // Change to bot2, bot3 for multiple numbers
-        dataPath: '/mnt/data/.wwebjs_auth' // Persistent disk for Render
+        clientId: 'bot1',
+        dataPath: '/mnt/data/.wwebjs_auth'
     }),
     puppeteer: {
         headless: true,
@@ -53,19 +68,26 @@ client.on('disconnected', reason => {
 });
 
 // ------------------
-// Message handler: reactive auto-reply
+// Message handler: auto-reply only to new numbers
 // ------------------
 client.on('message', async msg => {
-    console.log(`📩 Message received from ${msg.from}: ${msg.body}`);
+    const sender = msg.from;
 
-    // Auto-reply text
-    const replyMessage = 'Hello! 👋 Thanks for messaging IBETIN. We will get back to you shortly.';
+    // Check if sender is already replied
+    if (!repliedNumbers.includes(sender)) {
+        const replyMessage = 'Hello! 👋 Thanks for messaging IBETIN. We will get back to you shortly.';
+        try {
+            await msg.reply(replyMessage);
+            console.log(`✅ Auto-reply sent to new number: ${sender}`);
 
-    try {
-        await msg.reply(replyMessage);
-        console.log(`✅ Auto-reply sent to ${msg.from}`);
-    } catch (err) {
-        console.error(`❌ Failed to send auto-reply to ${msg.from}:`, err);
+            // Save this number to memory & file
+            repliedNumbers.push(sender);
+            fs.writeFileSync(DATA_FILE, JSON.stringify(repliedNumbers));
+        } catch (err) {
+            console.error(`❌ Failed to send auto-reply to ${sender}:`, err);
+        }
+    } else {
+        console.log(`ℹ️ Message from existing number: ${sender}, no auto-reply sent.`);
     }
 });
 
@@ -103,5 +125,3 @@ app.get('/', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Server running on port ${PORT}`);
 });
-
-
