@@ -6,13 +6,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ------------------
-// Step 1: Track bot status
+// Track bot status
 // ------------------
 let latestQRCode = null;
 let isReady = false;
 
 // ------------------
-// Step 2: WhatsApp client with persistent session (Render compatible)
+// WhatsApp client with persistent session
 // ------------------
 const client = new Client({
     authStrategy: new LocalAuth({
@@ -26,7 +26,7 @@ const client = new Client({
 });
 
 // ------------------
-// Step 3: QR code received
+// QR code event
 // ------------------
 client.on('qr', async qr => {
     latestQRCode = await qrcode.toDataURL(qr);
@@ -35,7 +35,7 @@ client.on('qr', async qr => {
 });
 
 // ------------------
-// Step 4: Client ready
+// Ready event
 // ------------------
 client.on('ready', () => {
     console.log('🤖 WhatsApp bot is ready and connected!');
@@ -43,37 +43,42 @@ client.on('ready', () => {
 });
 
 // ------------------
-// Step 5: Handle disconnection and auto-reconnect
+// Handle disconnection & auto-reconnect
 // ------------------
 client.on('disconnected', reason => {
     console.log(`⚠️ Disconnected due to: ${reason}`);
     isReady = false;
-    console.log('♻️ Attempting to reinitialize client...');
-    setTimeout(() => {
-        client.initialize();
-    }, 5000); // Wait 5 seconds before reconnect
+    console.log('♻️ Reinitializing client in 5 seconds...');
+    setTimeout(() => client.initialize(), 5000);
 });
 
 // ------------------
-// Step 6: Message handler
+// Message handler: reactive auto-reply
 // ------------------
-client.on('message', msg => {
-    console.log(`📩 Message received: ${msg.body}`);
-    if (msg.body.toLowerCase() === 'hi') {
-        msg.reply('Hello! 👋 Welcome to IBETIN.');
+client.on('message', async msg => {
+    console.log(`📩 Message received from ${msg.from}: ${msg.body}`);
+
+    // Auto-reply text
+    const replyMessage = 'Hello! 👋 Thanks for messaging IBETIN. We will get back to you shortly.';
+
+    try {
+        await msg.reply(replyMessage);
+        console.log(`✅ Auto-reply sent to ${msg.from}`);
+    } catch (err) {
+        console.error(`❌ Failed to send auto-reply to ${msg.from}:`, err);
     }
 });
 
 // ------------------
-// Step 7: Initialize client
+// Initialize client
 // ------------------
 client.initialize();
 
 // ------------------
-// Step 8: Browser QR/Status route
+// Express route for QR/status
 // ------------------
 app.get('/', (req, res) => {
-    let html = `
+    const html = `
         <meta http-equiv="refresh" content="5">
         <style>
             body { font-family: Arial, sans-serif; text-align: center; padding-top: 50px; }
@@ -81,26 +86,22 @@ app.get('/', (req, res) => {
             .status { font-size: 1.2rem; margin-top: 10px; }
         </style>
         <h1>WhatsApp API Status</h1>
+        ${
+            !isReady && latestQRCode
+                ? `<div class="status">📱 Waiting for WhatsApp login...</div><img src="${latestQRCode}" alt="QR Code" />`
+                : isReady
+                ? `<div class="status">✅ Connected to WhatsApp successfully!</div>`
+                : `<div class="status">⏳ Initializing, please wait...</div>`
+        }
     `;
-
-    if (latestQRCode && !isReady) {
-        html += `
-            <div class="status">📱 Waiting for WhatsApp login...</div>
-            <img src="${latestQRCode}" alt="QR Code" />
-        `;
-    } else if (isReady) {
-        html += `<div class="status">✅ Connected to WhatsApp successfully!</div>`;
-    } else {
-        html += `<div class="status">⏳ Initializing, please wait...</div>`;
-    }
-
     res.send(html);
 });
 
 // ------------------
-// Step 9: Start Express server
+// Start Express server
 // ------------------
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Server running on port ${PORT}`);
 });
+
 
