@@ -31,7 +31,7 @@ if (fs.existsSync(DATA_FILE)) {
 const client = new Client({
     authStrategy: new LocalAuth({
         clientId: 'bot1',
-        dataPath: '/mnt/data/.wwebjs_auth'
+        dataPath: '/mnt/data/.wwebjs_auth/bot1'
     }),
     puppeteer: {
         headless: true,
@@ -130,3 +130,4 @@ app.get('/', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Server running on port ${PORT}`);
 });
+
