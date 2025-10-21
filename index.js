@@ -5,10 +5,10 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 
-const PORT = process.env.PORT || 3011;
+const PORT = process.env.PORT || 3000;
 const DATA_DIR = process.env.DATA_DIR || '/mnt/data';
-const DATA_FILE = path.join(DATA_DIR, 'repliedNumbers_bot11.json');
-const AUTH_DIR = path.join(DATA_DIR, '.wwebjs_auth/bot11');
+const DATA_FILE = path.join(DATA_DIR, 'repliedNumbers_bot0.json');
+const AUTH_DIR = path.join(DATA_DIR, '.wwebjs_auth/bot0');
 
 // ------------------
 // Ensure directories exist
@@ -71,7 +71,7 @@ loadRepliedNumbers();
 // ------------------
 const client = new Client({
     authStrategy: new LocalAuth({
-        clientId: 'bot11',
+        clientId: 'bot0',
         dataPath: AUTH_DIR
     }),
     puppeteer: {
@@ -401,3 +401,4 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Server running on port ${PORT}`);
     console.log(`📊 Visit http://localhost:${PORT} to see bot status`);
 });
+
